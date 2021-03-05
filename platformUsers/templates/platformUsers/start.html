@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    {% if not request.user.is_anonymous %}
+        You're logged as {{ request.user }} Status: {{request.user.profile.user_type}}
+    {% else %}
+        You are not logged in
+    {% endif %}<br>
+<a href="/sign_up"> SignUp </a><br>
+<a href="/sign_in"> SignIn </a><br>
+<a href="/logout"> Logout </a><br>
+<a href="/cabin"> Private Cabin </a>
+</body>
+</html>

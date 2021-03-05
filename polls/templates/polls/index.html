@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+        Polls:
+            <form action="" method="post">
+                {% csrf_token %}
+                {% for poll, value in form.data.items %}
+                    <h2>{{ poll }}</h2>
+                    {% for question, choices in value.items %}
+                    <h4>{{ question }}</h4>
+                        {% for choice in choices %}
+                <li>{{ choice }}</li>
+                        {% endfor %}
+                    {% endfor %}
+
+                {% endfor %}<br>
+                <input type="submit" value="enroll" />
+            </form>
+</body>
+</html>
