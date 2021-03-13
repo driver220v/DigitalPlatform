@@ -8,8 +8,11 @@ from platformUsers.models import Profile
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        prof_args = getattr(instance, '_prof_data', None)
-        Profile.objects.create(user=instance, **prof_args)
+        prof_args = getattr(instance, "_prof_data", None)
+        if not prof_args:
+            Profile.objects.create(user=instance)
+        else:
+            Profile.objects.create(user=instance, **prof_args)
 
 
 @receiver(post_save, sender=User)

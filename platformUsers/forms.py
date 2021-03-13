@@ -7,31 +7,37 @@ from .models import Profile
 
 
 class ProfileForm(forms.ModelForm):
-    user_type = forms.ChoiceField(required=True,
-                                  choices=PlatformUserEnum.choices())
+    user_type = forms.ChoiceField(required=True, choices=PlatformUserEnum.choices())
 
     def __init__(self, *args, **kwargs):
-        super(ProfileForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         for field in self.Meta.non_required:
             self.fields[field].required = False
 
     class Meta:
         model = Profile
-        fields = '__all__'
-        exclude = ['user', ]
-        non_required = ['ph_number', 'avatar']
+        fields = "__all__"
+        exclude = [
+            "user",
+        ]
+        non_required = ["ph_number", "avatar"]
 
 
 class UserForm(UserCreationForm):
     class Meta:
         model = User
-        fields = ['username', 'first_name',
-                  'last_name', 'email',
-                  'password1', 'password2']
+        fields = [
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "password1",
+            "password2",
+        ]
 
     def save(self, commit=True, *args, **kwargs):
-        user = super(UserForm, self).save(commit=False)
-        prof_data = kwargs.get('profile_data', None)
+        user = super().save(commit=False)
+        prof_data = kwargs.get("profile_data", None)
         user._prof_data = prof_data
         if commit:
             user.save()
@@ -41,9 +47,9 @@ class UserForm(UserCreationForm):
 
 class AuthForm(AuthenticationForm):
     def clean_username(self):
-        username = self.cleaned_data['username']
+        username = self.cleaned_data["username"]
         if not User.objects.filter(username=username).exists():
-            raise forms.ValidationError(f'Username {username} is already in use.')
+            raise forms.ValidationError(f"Username {username} is already in use.")
         return username
 
     class Meta:
@@ -51,23 +57,22 @@ class AuthForm(AuthenticationForm):
 
 
 class UpdateProfileForm(forms.ModelForm):
-    user_type = forms.ChoiceField(required=True,
-                                  choices=PlatformUserEnum.choices())
+    user_type = forms.ChoiceField(required=True, choices=PlatformUserEnum.choices())
 
     def __init__(self, *args, **kwargs):
-        super(UpdateProfileForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         for field in self.Meta.non_required:
             self.fields[field].required = False
 
     class Meta:
         model = Profile
-        fields = '__all__'
-        exclude = ('user',)
-        non_required = ['ph_number', 'avatar']
+        fields = "__all__"
+        exclude = ("user",)
+        non_required = ["ph_number", "avatar"]
 
     def clean_user_type(self):
         if self.instance:
             return self.instance.user_type
 
         else:
-            return self.fields['user_type']
+            return self.fields["user_type"]

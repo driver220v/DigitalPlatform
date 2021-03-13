@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.urls import path, include
-from .views import PollsView
+from .views import PollsView, PollDetailView, PollHistoryView
 
 urlpatterns = [
-    path('', PollsView.as_view())
+    path("", PollsView.as_view(), name="PollsView"),
+    path("<int:pk>", PollDetailView.as_view()),
+    path("users/cabin/history", PollHistoryView.as_view(), name="UserCabinView"),
 ]
