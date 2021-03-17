@@ -9,8 +9,12 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
+import os
 from pathlib import Path
+from dotenv import load_dotenv, find_dotenv
+
+env_path = Path('.') / '.env'
+load_dotenv(dotenv_path=find_dotenv(filename=env_path, raise_error_if_not_found=True))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,10 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "j)mq#n55nm@k5zfx591_pyxtzj^3r^a_7a4$uc2bnk4_qil1wu"
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(os.getenv("DEBUG"))
 
 ALLOWED_HOSTS = []
 
@@ -121,14 +125,23 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("polls.permissions.TeacherPermission",)
 }
 
+# todo в dotenv
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT"))
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+EMAIL_USE_TLS = bool(os.getenv("EMAIL_USE_TLS"))
+
 
 def show_toolbar(request):
     return True
 
 
+"""Debug Tool bar"""
 if DEBUG:
     INTERNAL_IPS = [
-        "127.0.0.1",
+        os.getenv("INTERNAL_IP1"),
     ]
 
     DEBUG_TOOLBAR_CONFIG = {

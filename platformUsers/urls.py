@@ -9,7 +9,7 @@ from .views import (
     LogoutView,
     StartPointView,
     UserCabinView,
-    TeacherView,
+    TeacherView, SendEmailView,
 )
 
 extra_patterns = [
@@ -33,4 +33,5 @@ urlpatterns = [
     path("", StartPointView.as_view(), name="HomeView"),
     path("cabin/history/", include(extra_patterns)),
     path("teacher", TeacherView.as_view(), name="TeacherView"),
+    path("cabin/send_email/", SendEmailView.as_view(), name="SendEmailView")
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
