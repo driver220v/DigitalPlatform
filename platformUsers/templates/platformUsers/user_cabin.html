@@ -10,8 +10,10 @@
     {{ form.as_p }}
     <button type='submit'>Update</button>
 
+    {{ email.as_p }}
 </form>
 <br>
-<a href="{% url 'HistoryView' %}"> History </a>
+<a href="{% url 'HistoryView' %}"> History </a><br>
+<a href ="{% url 'SendEmailView' %}"> Send Question </a>
 </body>
 </html>

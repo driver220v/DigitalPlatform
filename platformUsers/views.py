@@ -4,17 +4,17 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from django.db.transaction import atomic
 from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.encoding import iri_to_uri
 from django.views.generic import View, UpdateView
-from django.contrib.auth.decorators import user_passes_test
-from django.utils.http import urlencode
 from polls.models import Poll
-from .forms import ProfileForm, UserForm, AuthForm, UpdateProfileForm, UserSelectForm
+from polls.permissions import TeacherPermission
+from .forms import ProfileForm, UserForm, AuthForm, UpdateProfileForm, UserSelectForm, SendEmailForm
 from .groups import add_permission
 from .models import Profile
 from .pass_test import is_teacher
+from .emailer import send_email
 
 
 # Create your views here.
@@ -57,7 +57,9 @@ class LogoutView(View):
     def get(self, request):
         if not request.user.is_anonymous:
             logout(request)
-        return HttpResponseRedirect(reverse("HomeView"))
+        response = reverse("HomeView")
+
+        return HttpResponseRedirect(response)
 
 
 class SingInView(View):
@@ -126,4 +128,27 @@ class TeacherView(LoginRequiredMixin, UserPassesTestMixin, View):
 
                 return HttpResponseRedirect(response)
             raise Http404
-            # todo create put method at polls app
+
+
+class SendEmailView(LoginRequiredMixin, UserPassesTestMixin, View):
+    login_url = "/sign_in/"
+    form = SendEmailForm
+
+    def test_func(self):
+        # todo implement way to 403
+        is_true = is_teacher(self.request.user)
+        if is_true:
+            return is_true
+        return HttpResponseForbidden()
+
+    def get(self, request, *args, **kwargs):
+        return render(request, 'platformUsers/send_email.html', context={"email": self.form()})
+
+    @atomic
+    def post(self, request, *args, **kwargs):
+        data = self.form(data=request.POST)
+        if data.is_valid():
+            body = data.cleaned_data["user_question"]
+            teach_email = User.objects.filter(username=data.cleaned_data["teacher_username"]).values_list("email",
+                                                                                                          flat=True)
+            send_email(body, request.user, list(teach_email))
