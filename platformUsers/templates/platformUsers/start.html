@@ -13,6 +13,10 @@
 <a href="/users/sign_up"> SignUp </a><br>
 <a href="/users/sign_in"> SignIn </a><br>
 <a href="/users/logout"> Logout </a><br>
-<a href="/users/cabin"> Private Cabin </a>
+<a href="/users/cabin"> Private Cabin </a><br>
+{% if request.user.profile.user_type == 'teacher' %}
+    <a href="/users/teacher"> Teacher HeadQuarters </a>
+{% endif %}
+
 </body>
 </html>

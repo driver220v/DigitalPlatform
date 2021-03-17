@@ -2,6 +2,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django import forms
 
+from polls.models import Poll
 from .enums import PlatformUserEnum
 from .models import Profile
 
@@ -76,3 +77,20 @@ class UpdateProfileForm(forms.ModelForm):
 
         else:
             return self.fields["user_type"]
+
+
+class UserSelectForm(forms.Form):
+    users_tup = [
+        (f"{username}", f"{username}")
+        for username in User.objects.values_list("username", flat=True)
+    ]
+    poll_tup = [
+        (f"{poll_title}", f"{poll_title}")
+        for poll_title in Poll.objects.values_list("poll_title", flat=True)
+    ]
+
+    select_username = forms.ChoiceField(required=True, choices=users_tup)
+    select_poll_t = forms.ChoiceField(required=True, choices=poll_tup)
+
+    class Meta:
+        model = User

@@ -4,7 +4,7 @@ from django.db import models
 
 # Create your models here.
 class Poll(models.Model):
-    poll_title = models.CharField(null=False, max_length=128)
+    poll_title = models.CharField(null=False, max_length=128, unique=True)
     poll_description = models.CharField(null=True, max_length=1024)
 
     def __str__(self):

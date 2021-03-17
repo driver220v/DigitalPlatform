@@ -1,10 +1,6 @@
 import itertools
-from collections import defaultdict
-
-from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Q
-from django.views.generic import detail
 from rest_framework import serializers
 
 from .models import Poll, PollQuestion, PollQuestionChoices, PollQuestionAnswer
@@ -49,8 +45,12 @@ class AnswerPostSerializer(serializers.Serializer):
 
     def __init__(self, *args, **kwargs):
         super(AnswerPostSerializer, self).__init__(*args, **kwargs)
-        self.fields["answers"].validators.append(self.validate_questions_data_exists)
-        self.fields["answers"].validators.append(self.validate_correlation)
+        answers_validators = [
+            self.validate_questions_data_exists,
+            self.validate_correlation,
+        ]
+        for validator in answers_validators:
+            self.fields["answers"].validators.append(validator)
 
     # validate that each choice_id corresponds to question_id
     def validate_correlation(self, answer_data: dict, raise_exception=None):
@@ -92,7 +92,7 @@ class AnswerPostSerializer(serializers.Serializer):
             )
 
     def get_ids_map(self):
-        # poll_d = represent: poll_id:{question_id: [choice_id]}
+        """poll_d = represent: poll_id:{question_id: [choice_id]}"""
         self.poll_d = {}
         for relation_t in list(self.instance):
             poll_id, question_id, choice_id = relation_t
@@ -109,12 +109,23 @@ class AnswerPostSerializer(serializers.Serializer):
 
 
 # _______________________________________________________________________________________#
+class SerializerFilter(serializers.ListSerializer):
+    """ Serializer for filtering Answers depending on user instance """
+
+    def to_representation(self, data):
+        if "custom_serializer" not in self.context:
+            data = data.filter(user=self.context["request"].user)
+        else:
+            data = data.filter(user=self.context["custom_serializer"]["user_id"])
+
+        return super().to_representation(data)
 
 
 class PollQuestionAnswerHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = PollQuestionAnswer
         fields = "__all__"
+        list_serializer_class = SerializerFilter
 
 
 class PollQuestionChoiceHistorySerializer(serializers.ModelSerializer):
@@ -136,25 +147,32 @@ class PollHistorySerializer(serializers.ModelSerializer):
     questions = PollQuestionHistorySerializer(many=True, read_only=True)
     results = serializers.SerializerMethodField()
 
-    def get_results(self, obj):
-        # todo вывод процента правильных к неерпавильным
-        total_q = self.instance.first().questions.count()
-        choices_status = PollQuestionChoices.objects.filter(
-            question__poll_id=self.instance.first().id
-        ).values_list("question_id", "id", "is_correct")
-        target_dict = defaultdict(list)
-        for i, _ in enumerate(choices_status):
-            if choices_status[i][2]:
-                target_dict[choices_status[i][0]].append(choices_status[i][1])
-        # correct = 2
-        # if total!=0:
-        #     return (correct / total)*100
+    def get_results(self, poll_obj):
+        """polls' questions amount"""
+        total_q = poll_obj.questions.count()
+        if "custom_serializer" in self.context:
+            user_id = self.context["custom_context"]["user_id"]
+        else:
+            user_id = self.context["request"].user
+        choices_status = (
+            PollQuestionAnswer.objects.select_related("question")
+            .filter(Q(question__choices__is_correct=True) & Q(question__poll_id=poll_obj.id) & Q(user_id=user_id))
+            .values("question__choices__id", "choice", "question__choices__is_correct")
+            .distinct()
+        )
+
+        """ Assemble map of ids to check if user choice to questions are correct """
+        correct_answers = 0
+        for data_q in list(choices_status):
+            if data_q["question__choices__id"] == data_q["choice"]:
+                """if choice id is equal to the id indicated by a user
+                Thus the answer to a question is correct"""
+                correct_answers += 1
+
+        if total_q != 0:
+            return f"{(correct_answers / total_q) * 100:.2f}%"
+        return f"{0.0}%"
 
     class Meta:
         model = Poll
         fields = "__all__"
-
-
-# PollQuestionChoices.objects.prefetch_related('answer').filter(
-#     Q(question__poll_id=obj.id) & Q(question__answer__user_id=self.instance)
-#   ).values_list('question_id', 'id', "is_correct",'question__answer__question')

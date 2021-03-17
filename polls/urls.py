@@ -5,5 +5,4 @@ from .views import PollsView, PollDetailView, PollHistoryView
 urlpatterns = [
     path("", PollsView.as_view(), name="PollsView"),
     path("<int:pk>", PollDetailView.as_view()),
-    path("users/cabin/history", PollHistoryView.as_view(), name="UserCabinView"),
 ]
