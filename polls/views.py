@@ -48,9 +48,9 @@ class PollDetailView(LoginRequiredMixin, RetrieveAPIView):
     def post(self, request, *args, **kwargs):
         serializer_ans = self.serializer_class_answers(
             instance=PollQuestionChoices.objects.select_related("question__poll")
-                .filter(question__poll_id=self.kwargs["pk"])
-                .values_list("question__poll_id", "question_id", "id")
-                .distinct(),
+            .filter(question__poll_id=self.kwargs["pk"])
+            .values_list("question__poll_id", "question_id", "id")
+            .distinct(),
             data=request.data,
         )
         if serializer_ans.is_valid():
@@ -63,8 +63,8 @@ class PollDetailView(LoginRequiredMixin, RetrieveAPIView):
                             choice_id=id_choice,
                         )
                         for id_question, id_choice in serializer_ans.validated_data[
-                        "answers"
-                    ].items()
+                            "answers"
+                        ].items()
                     ]
                 )
             return Response(
@@ -113,7 +113,7 @@ class PollHistoryView(LoginRequiredMixin, ListAPIView):
 
     def get(self, request, *args, **kwargs):
         """Check if no kwargs, should check if exists,
-         otherwise data in kwargs is already trustworthy """
+        otherwise data in kwargs is already trustworthy"""
         if not any(list(kwargs.values())):
             has_answered = Poll.objects.filter(
                 questions__answer__user=request.user

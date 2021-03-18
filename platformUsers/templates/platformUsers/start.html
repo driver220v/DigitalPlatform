@@ -15,7 +15,7 @@
 <a href="/users/logout"> Logout </a><br>
 <a href="/users/cabin"> Private Cabin </a><br>
 {% if request.user.profile.user_type == 'teacher' %}
-    <a href="/users/teacher"> Teacher HeadQuarters </a>
+    <a href ="{% url 'TeacherView' %}"> TeacherHeadquarters </a>
 {% endif %}
 
 </body>

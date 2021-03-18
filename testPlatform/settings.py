@@ -11,10 +11,6 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 import os
 from pathlib import Path
-from dotenv import load_dotenv, find_dotenv
-
-env_path = Path('.') / '.env'
-load_dotenv(dotenv_path=find_dotenv(filename=env_path, raise_error_if_not_found=True))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,14 +36,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "debug_toolbar",
+    # "debug_toolbar",
+    "rest_framework_swagger",
     "platformUsers.apps.PlatformusersConfig",
-    "polls",
+    "polls.apps.PollsConfig",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -126,20 +122,20 @@ REST_FRAMEWORK = {
 }
 
 # todo в dotenv
-EMAIL_HOST = os.getenv('EMAIL_HOST')
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT"))
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
 EMAIL_USE_TLS = bool(os.getenv("EMAIL_USE_TLS"))
 
-
-def show_toolbar(request):
-    return True
-
-
 """Debug Tool bar"""
 if DEBUG:
+    #   MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
+
+    def show_toolbar(request):
+        return True
+
     INTERNAL_IPS = [
         os.getenv("INTERNAL_IP1"),
     ]

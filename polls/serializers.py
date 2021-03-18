@@ -156,7 +156,11 @@ class PollHistorySerializer(serializers.ModelSerializer):
             user_id = self.context["request"].user
         choices_status = (
             PollQuestionAnswer.objects.select_related("question")
-            .filter(Q(question__choices__is_correct=True) & Q(question__poll_id=poll_obj.id) & Q(user_id=user_id))
+            .filter(
+                Q(question__choices__is_correct=True)
+                & Q(question__poll_id=poll_obj.id)
+                & Q(user_id=user_id)
+            )
             .values("question__choices__id", "choice", "question__choices__is_correct")
             .distinct()
         )

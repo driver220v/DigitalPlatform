@@ -98,9 +98,12 @@ class UserSelectForm(forms.Form):
 
 class SendEmailForm(forms.Form):
     user_question = forms.CharField(widget=forms.TextInput(attrs={"size": 25}))
-    teacher_username = forms.ChoiceField(choices=((f"{user.username}", f"{user.username}")
-                                                  for user in User.objects.filter(profile__user_type="teacher")))
-
+    teacher_username = forms.ChoiceField(
+        choices=(
+            (f"{user.username}", f"{user.username}")
+            for user in User.objects.filter(profile__user_type="teacher")
+        )
+    )
 
     class Meta:
         model = User

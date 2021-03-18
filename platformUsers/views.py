@@ -9,8 +9,14 @@ from django.urls import reverse
 from django.utils.encoding import iri_to_uri
 from django.views.generic import View, UpdateView
 from polls.models import Poll
-from polls.permissions import TeacherPermission
-from .forms import ProfileForm, UserForm, AuthForm, UpdateProfileForm, UserSelectForm, SendEmailForm
+from .forms import (
+    ProfileForm,
+    UserForm,
+    AuthForm,
+    UpdateProfileForm,
+    UserSelectForm,
+    SendEmailForm,
+)
 from .groups import add_permission
 from .models import Profile
 from .pass_test import is_teacher
@@ -79,7 +85,9 @@ class SingInView(View):
             if user is not None:
                 login(request, user)
                 return HttpResponseRedirect(reverse("HomeView"))
-        return render(request, "platformUsers/index.html", context={"user": form})
+        return render(
+            request, "platformUsers/index.html", context={"user": form}, status=401
+        )
 
 
 class UserCabinView(LoginRequiredMixin, UpdateView, View):
@@ -142,13 +150,16 @@ class SendEmailView(LoginRequiredMixin, UserPassesTestMixin, View):
         return HttpResponseForbidden()
 
     def get(self, request, *args, **kwargs):
-        return render(request, 'platformUsers/send_email.html', context={"email": self.form()})
+        return render(
+            request, "platformUsers/send_email.html", context={"email": self.form()}
+        )
 
     @atomic
     def post(self, request, *args, **kwargs):
         data = self.form(data=request.POST)
         if data.is_valid():
             body = data.cleaned_data["user_question"]
-            teach_email = User.objects.filter(username=data.cleaned_data["teacher_username"]).values_list("email",
-                                                                                                          flat=True)
+            teach_email = User.objects.filter(
+                username=data.cleaned_data["teacher_username"]
+            ).values_list("email", flat=True)
             send_email(body, request.user, list(teach_email))
