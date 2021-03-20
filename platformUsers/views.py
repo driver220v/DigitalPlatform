@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.db.transaction import atomic
-from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
+from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.encoding import iri_to_uri
@@ -125,6 +125,7 @@ class TeacherView(LoginRequiredMixin, UserPassesTestMixin, View):
                 Q(questions__answer__user=user.id)
                 & Q(poll_title=input_data.cleaned_data["select_poll_t"])
             ).exists()
+            # todo рассмотреть это место
             if has_answered_poll:
                 response = reverse(
                     "HistoryDetailView",
@@ -135,7 +136,8 @@ class TeacherView(LoginRequiredMixin, UserPassesTestMixin, View):
                 )
 
                 return HttpResponseRedirect(response)
-            raise Http404
+            raise HttpResponseNotFound
+        return HttpResponseNotFound()
 
 
 class SendEmailView(LoginRequiredMixin, UserPassesTestMixin, View):

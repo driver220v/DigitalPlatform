@@ -1,7 +1,10 @@
 import itertools
+import warnings
+
 from django.db import transaction
 from django.db.models import Q
-from rest_framework import serializers
+from rest_framework import serializers, RemovedInDRF313Warning
+from rest_framework.exceptions import ValidationError
 
 from .models import Poll, PollQuestion, PollQuestionChoices, PollQuestionAnswer
 
@@ -43,36 +46,52 @@ class PollSerializer(serializers.ModelSerializer):
 class AnswerPostSerializer(serializers.Serializer):
     answers = serializers.DictField()
 
-    def __init__(self, *args, **kwargs):
-        super(AnswerPostSerializer, self).__init__(*args, **kwargs)
+    def validate_answers(self, data):
         answers_validators = [
             self.validate_questions_data_exists,
             self.validate_correlation,
         ]
-        for validator in answers_validators:
-            self.fields["answers"].validators.append(validator)
+        for validate in answers_validators:
+            validate(data)
+        return data
 
     # validate that each choice_id corresponds to question_id
     def validate_correlation(self, answer_data: dict, raise_exception=None):
         for question_id, choice_id in answer_data.items():
-            if choice_id not in list(self.poll_d.values())[0][int(question_id)]:
-                detail_descr = "Invalid choice ID. Choice ID is not applicable for this Question ID"
+            if int(question_id) not in list(self.poll_d.values())[0]:
+                detail_descr = "Question ID is not applicable for this Poll"
                 raise serializers.ValidationError(detail_descr, code=400)
+
+            else:
+                if choice_id not in list(self.poll_d.values())[0][int(question_id)]:
+                    detail_descr = "Invalid choice ID. Choice ID is not applicable for this Question ID"
+                    raise serializers.ValidationError(detail_descr, code=400)
 
     # validate presence of choices_ids and questions_ids in a selected poll
     def validate_questions_data_exists(self, answer_data: dict, raise_exception=None):
         for poll_id, question_data in self.poll_d.items():
-            if any([int(i) for i in list(answer_data.keys())]) not in list(
-                question_data.keys()
-            ):
+            integer_questions_ids = [int(i) for i in list(answer_data.keys())]
+
+            status = False
+            for question_id in integer_questions_ids:
+                if question_id not in list(question_data.keys()):
+                    status = True
+                    break
+            if status:
+                detail_descr = "Question ID is not applicable for this Poll"
+                raise serializers.ValidationError(detail_descr, code=400)
+
+            status = False
+            answers_integers_ids = list(answer_data.values())
+            for answer_id in answers_integers_ids:
+                if answer_id not in list(itertools.chain.from_iterable(question_data.values())):
+                    status = True
+                    break
+            if status:
                 detail_descr = "Choice ID is not applicable for this Poll"
                 raise serializers.ValidationError(detail_descr, code=400)
 
-            if any(list(answer_data.values())) not in list(
-                itertools.chain.from_iterable(question_data.values())
-            ):
-                detail_descr = "Question ID is not applicable for this Poll"
-                raise serializers.ValidationError(detail_descr, code=400)
+        return answer_data
 
     def is_valid(self, *args, raise_exception=False, **kwargs):
         self.get_ids_map()
@@ -156,13 +175,13 @@ class PollHistorySerializer(serializers.ModelSerializer):
             user_id = self.context["request"].user
         choices_status = (
             PollQuestionAnswer.objects.select_related("question")
-            .filter(
+                .filter(
                 Q(question__choices__is_correct=True)
                 & Q(question__poll_id=poll_obj.id)
                 & Q(user_id=user_id)
             )
-            .values("question__choices__id", "choice", "question__choices__is_correct")
-            .distinct()
+                .values("question__choices__id", "choice", "question__choices__is_correct")
+                .distinct()
         )
 
         """ Assemble map of ids to check if user choice to questions are correct """

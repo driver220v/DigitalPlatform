@@ -19,6 +19,7 @@ extra_patterns = [
         PollHistoryView.as_view(),
         name="HistoryView",
     ),
+    # todo рассмотреть это место
     path(
         "<str:poll_title>/<int:user_id>",
         PollHistoryView.as_view(),
@@ -28,7 +29,7 @@ extra_patterns = [
 
 urlpatterns = [
     path("sign_up/", SignUpView.as_view(), name="SignUpView"),
-    path("sign_in/", SingInView.as_view(), name="SignIpView"),
+    path("sign_in/", SingInView.as_view(), name="SignInView"),
     path("logout/", LogoutView.as_view(), name="LogoutView"),
     path("cabin/", UserCabinView.as_view(), name="UserCabinView"),
     path("", StartPointView.as_view(), name="HomeView"),

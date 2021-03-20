@@ -25,7 +25,7 @@ class PollsView(LoginRequiredMixin, ListAPIView):
 
 
 class PollDetailView(LoginRequiredMixin, RetrieveAPIView):
-    login_url = "http://127.0.0.1:8000/userusers/sign_in/"
+    login_url = "http://127.0.0.1:8000/users/sign_in/"
     queryset = Poll.objects
     serializer_class_polls = PollSerializer
     serializer_class_answers = AnswerPostSerializer
@@ -46,6 +46,11 @@ class PollDetailView(LoginRequiredMixin, RetrieveAPIView):
 
     @atomic
     def post(self, request, *args, **kwargs):
+        has_answered = Poll.objects.filter(
+            questions__answer__user=request.user
+        ).exists()
+        if has_answered:
+            return Response(data={"status": "You've already answered"}, status=status.HTTP_400_BAD_REQUEST)
         serializer_ans = self.serializer_class_answers(
             instance=PollQuestionChoices.objects.select_related("question__poll")
             .filter(question__poll_id=self.kwargs["pk"])

@@ -79,18 +79,31 @@ class UpdateProfileForm(forms.ModelForm):
             return self.fields["user_type"]
 
 
-class UserSelectForm(forms.Form):
+def get_users_tup():
     users_tup = [
         (f"{username}", f"{username}")
         for username in User.objects.values_list("username", flat=True)
     ]
+    return users_tup
+
+
+def get_poll_tup():
     poll_tup = [
         (f"{poll_title}", f"{poll_title}")
         for poll_title in Poll.objects.values_list("poll_title", flat=True)
     ]
+    return poll_tup
 
-    select_username = forms.ChoiceField(required=True, choices=users_tup)
-    select_poll_t = forms.ChoiceField(required=True, choices=poll_tup)
+
+class UserSelectForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['select_username'].choices = get_users_tup()
+        self.fields['select_poll_t'].choices = get_poll_tup()
+
+    select_username = forms.ChoiceField(required=True)
+    select_poll_t = forms.ChoiceField(required=True)
 
     class Meta:
         model = User
